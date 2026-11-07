@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Services – Arène Esport</title>
+<style>
+  :root {
+    --fond: #0e0b1a;
+    --carte: #1a1530;
+    --ligne: #2e2750;
+    --texte: #ece8ff;
+    --discret: #9b94c4;
+    --accent: #ff7a1a;
+    --accent-2: #7c5cff;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--fond);
+    color: var(--texte);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  h1, h3, .prix { font-family: "Impact", "Arial Narrow", sans-serif; font-weight: 400; letter-spacing: .02em; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .conteneur { width: min(100% - 2rem, 960px); margin-inline: auto; }
+
+  header { border-bottom: 1px solid var(--ligne); }
+  nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 0; }
+  .logo { font-family: "Impact", sans-serif; font-size: 1.4rem; }
+  .logo span { color: var(--accent); }
+  nav a.retour { color: var(--discret); font-size: .95rem; }
+
+  main { padding: 2rem 0 3rem; }
+  h1 { font-size: 2.4rem; margin-bottom: .4rem; }
+  .intro { color: var(--discret); margin-bottom: 1.5rem; }
+
+  /* Boutons de filtre */
+  .filtres { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1.5rem; }
+  .filtre {
+    background: transparent;
+    color: var(--texte);
+    border: 1px solid var(--ligne);
+    border-radius: 999px;
+    padding: .5rem 1rem;
+    font-size: .95rem;
+    cursor: pointer;
+  }
+  .filtre.actif { background: var(--accent-2); border-color: var(--accent-2); }
+
+  /* Cartes de services */
+  .grille { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .carte {
+    background: var(--carte);
+    border: 1px solid var(--ligne);
+    border-radius: 14px;
+    padding: 1.3rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .categorie { color: var(--accent-2); font-size: .85rem; margin-bottom: .3rem; }
+  .carte h3 { font-size: 1.5rem; margin-bottom: .4rem; }
+  .carte p.desc { color: var(--discret); font-size: .95rem; flex-grow: 1; }
+  .prix { color: var(--accent); font-size: 1.6rem; margin: .8rem 0; }
+  .commander {
+    background: var(--accent);
+    color: #1a0d00;
+    font-weight: 700;
+    font-size: 1rem;
+    border: 0;
+    border-radius: 10px;
+    padding: .8rem;
+    cursor: pointer;
+  }
+  .commander:hover { filter: brightness(1.08); }
+  .note { color: var(--discret); font-size: .85rem; text-align: center; margin-top: 1.5rem; }
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e0b1a">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<header>
+  <nav class="conteneur">
+    <a href="index.html" class="logo">ARÈNE<span>.</span>ESPORT</a>
+    <a href="index.html" class="retour">Retour à l’accueil</a>
+  </nav>
+</header>
+
+<main class="conteneur">
+  <h1>Mes services</h1>
+  <p class="intro">Choisis ton offre et commande en un clic sur WhatsApp.</p>
+
+  <div class="filtres" id="filtres"></div>
+  <div class="grille" id="grille"></div>
+
+  <p class="note">Paiement et détails confirmés par WhatsApp avant toute prestation.</p>
+</main>
+
+<script>
+  // ===== Réglage : ton numéro WhatsApp (indicatif + numéro, sans + ni espaces) =====
+  const NUMERO_ORGANISATEUR = "225XXXXXXXXXX";
+
+  // ===== Catalogue : ajoute, modifie ou supprime des offres ici =====
+  const SERVICES = [
+    { categorie: "Coaching", nom: "Séance découverte", prix: 2000,
+      desc: "30 minutes pour analyser ton jeu et repérer tes points faibles." },
+    { categorie: "Coaching", nom: "Pack progression", prix: 8000,
+      desc: "5 séances de suivi : visée, rotations et stratégie d’équipe." },
+    { categorie: "Designs", nom: "Logo d’équipe", prix: 3000,
+      desc: "Un logo unique pour ton équipe, livré en PNG." },
+    { categorie: "Designs", nom: "Pack tournoi", prix: 5000,
+      desc: "Affiche, bannière et miniature pour ton propre tournoi." },
+    { categorie: "Configurations", nom: "Sensibilité et HUD", prix: 1500,
+      desc: "Réglages de sensibilité et de disposition adaptés à ton téléphone." },
+    { categorie: "Configurations", nom: "Configuration complète", prix: 3000,
+      desc: "Sensibilité, HUD, graphismes et conseils d’optimisation." }
+  ];
+
+  const zoneFiltres = document.getElementById("filtres");
+  const zoneGrille = document.getElementById("grille");
+  let filtreActuel = "Tout";
+
+  // Formate 2000 en "2 000 FCFA"
+  function formaterPrix(n) {
+    return n.toLocaleString("fr-FR") + " FCFA";
+  }
+
+  // Ouvre WhatsApp avec un message prêt pour l'offre choisie
+  function commander(service) {
+    const message = "Bonjour, je veux commander : " + service.nom +
+      " (" + service.categorie + ") à " + formaterPrix(service.prix) + ".";
+    window.location.href = "https://wa.me/" + NUMERO_ORGANISATEUR + "?text=" + encodeURIComponent(message);
+  }
+
+  // Affiche les cartes selon le filtre choisi
+  function afficherCartes() {
+    zoneGrille.innerHTML = "";
+    SERVICES
+      .filter(s => filtreActuel === "Tout" || s.categorie === filtreActuel)
+      .forEach(s => {
+        const carte = document.createElement("article");
+        carte.className = "carte";
+
+        const cat = document.createElement("p");
+        cat.className = "categorie";
+        cat.textContent = s.categorie;
+
+        const titre = document.createElement("h3");
+        titre.textContent = s.nom;
+
+        const desc = document.createElement("p");
+        desc.className = "desc";
+        desc.textContent = s.desc;
+
+        const prix = document.createElement("p");
+        prix.className = "prix";
+        prix.textContent = formaterPrix(s.prix);
+
+        const bouton = document.createElement("button");
+        bouton.className = "commander";
+        bouton.textContent = "Commander";
+        bouton.addEventListener("click", () => commander(s));
+
+        carte.append(cat, titre, desc, prix, bouton);
+        zoneGrille.appendChild(carte);
+      });
+  }
+
+  // Crée les boutons de filtre : Tout + une catégorie par type de service
+  function creerFiltres() {
+    const categories = ["Tout", ...new Set(SERVICES.map(s => s.categorie))];
+    categories.forEach(nom => {
+      const b = document.createElement("button");
+      b.className = "filtre" + (nom === filtreActuel ? " actif" : "");
+      b.textContent = nom;
+      b.addEventListener("click", () => {
+        filtreActuel = nom;
+        document.querySelectorAll(".filtre").forEach(f => f.classList.remove("actif"));
+        b.classList.add("actif");
+        afficherCartes();
+      });
+      zoneFiltres.appendChild(b);
+    });
+  }
+
+  creerFiltres();
+  afficherCartes();
+</script>
+<script src="pwa.js"></script>
+</body>
+</html>

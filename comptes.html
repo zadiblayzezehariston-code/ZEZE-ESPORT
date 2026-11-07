@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Comptes de jeux – Arène Esport</title>
+<style>
+  :root {
+    --fond: #0e0b1a;
+    --carte: #1a1530;
+    --ligne: #2e2750;
+    --texte: #ece8ff;
+    --discret: #9b94c4;
+    --accent: #ff7a1a;
+    --accent-2: #7c5cff;
+    --erreur: #ff5c7a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--fond);
+    color: var(--texte);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.6;
+  }
+  h1, h2, h3, .prix { font-family: "Impact", "Arial Narrow", sans-serif; font-weight: 400; letter-spacing: .02em; }
+  a { color: inherit; text-decoration: none; }
+  :focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .conteneur { width: min(100% - 2rem, 960px); margin-inline: auto; }
+
+  header { border-bottom: 1px solid var(--ligne); }
+  nav { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 0; }
+  .logo { font-family: "Impact", sans-serif; font-size: 1.4rem; }
+  .logo span { color: var(--accent); }
+  nav a.retour { color: var(--discret); font-size: .95rem; }
+
+  main { padding: 2rem 0 3rem; }
+  h1 { font-size: 2.4rem; margin-bottom: .4rem; }
+  h2 { font-size: 1.8rem; margin-bottom: 1rem; }
+  .intro { color: var(--discret); margin-bottom: 1.2rem; }
+
+  .avertissement {
+    border: 1px solid var(--accent-2);
+    border-radius: 12px;
+    padding: 1rem;
+    color: var(--discret);
+    font-size: .92rem;
+    margin-bottom: 2rem;
+  }
+  .avertissement strong { color: var(--texte); }
+
+  section { margin-bottom: 3rem; }
+
+  /* Champs et boutons */
+  label { display: block; font-weight: 600; margin-bottom: .3rem; }
+  input, select, textarea {
+    width: 100%;
+    background: var(--fond);
+    color: var(--texte);
+    border: 1px solid var(--ligne);
+    border-radius: 10px;
+    padding: .8rem;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+  textarea { min-height: 90px; resize: vertical; }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  .invalide { border-color: var(--erreur); }
+  .erreur { color: var(--erreur); font-size: .85rem; margin-top: .25rem; min-height: 1.1em; }
+  .aide { color: var(--discret); font-size: .85rem; margin-top: .25rem; }
+  .bouton {
+    background: var(--accent);
+    color: #1a0d00;
+    font-weight: 700;
+    font-size: 1rem;
+    border: 0;
+    border-radius: 10px;
+    padding: .85rem;
+    cursor: pointer;
+  }
+  .bouton:hover { filter: brightness(1.08); }
+  .bouton.secondaire { background: transparent; color: var(--texte); border: 1px solid var(--accent-2); }
+  .boutons-carte { display: grid; gap: .5rem; }
+
+  /* Filtres */
+  .filtres { display: grid; gap: .8rem; grid-template-columns: 1fr 1fr; margin-bottom: 1.2rem; }
+
+  /* Cartes */
+  .grille { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+  .carte {
+    background: var(--carte);
+    border: 1px solid var(--ligne);
+    border-radius: 14px;
+    padding: 1.3rem;
+    display: flex;
+    flex-direction: column;
+  }
+  .etiquettes { display: flex; gap: .4rem; flex-wrap: wrap; margin-bottom: .5rem; }
+  .etiquette { font-size: .8rem; border: 1px solid var(--ligne); border-radius: 999px; padding: .1rem .6rem; color: var(--discret); }
+  .carte h3 { font-size: 1.4rem; margin-bottom: .3rem; }
+  .carte p.desc { color: var(--discret); font-size: .95rem; flex-grow: 1; }
+  .prix { color: var(--accent); font-size: 1.6rem; margin: .8rem 0; }
+  .vide { color: var(--discret); grid-column: 1 / -1; }
+
+  /* Formulaire de vente */
+  form {
+    background: var(--carte);
+    border: 1px solid var(--ligne);
+    border-radius: 16px;
+    padding: 1.4rem;
+    display: grid;
+    gap: 1.1rem;
+  }
+</style>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e0b1a">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<header>
+  <nav class="conteneur">
+    <a href="index.html" class="logo">ARÈNE<span>.</span>ESPORT</a>
+    <a href="index.html" class="retour">Retour à l’accueil</a>
+  </nav>
+</header>
+
+<main class="conteneur">
+  <h1>Comptes de jeux</h1>
+  <p class="intro">Achète un compte vérifié ou propose le tien à la vente.</p>
+
+  <div class="avertissement">
+    <strong>Pour ta sécurité :</strong> ne donne jamais ton mot de passe dans un formulaire ni avant la confirmation du paiement.
+    Chaque vente passe par moi comme intermédiaire. Attention : certains éditeurs de jeux interdisent la vente de comptes,
+    et un compte peut être suspendu. Vérifie les règles du jeu avant d’acheter ou de vendre.
+  </div>
+
+  <!-- ===== ACHETER ===== -->
+  <section id="acheter">
+    <h2>Comptes à vendre</h2>
+
+    <div class="filtres">
+      <div>
+        <label for="filtre-jeu">Jeu</label>
+        <select id="filtre-jeu"></select>
+      </div>
+      <div>
+        <label for="filtre-plateforme">Plateforme</label>
+        <select id="filtre-plateforme"></select>
+      </div>
+    </div>
+
+    <div class="grille" id="grille"></div>
+  </section>
+
+  <!-- ===== PROPOSER UN PRIX ===== -->
+  <section id="offre">
+    <h2>Proposer mon prix</h2>
+    <p class="intro">Tu cherches un compte ou tu veux négocier ? Indique ton budget et je te réponds sur WhatsApp.</p>
+    <form id="formulaire-offre" novalidate>
+      <div>
+        <label for="offre-jeu">Jeu</label>
+        <select id="offre-jeu"></select>
+      </div>
+      <div>
+        <label for="offre-plateforme">Plateforme</label>
+        <select id="offre-plateforme"></select>
+      </div>
+      <div>
+        <label for="offre-details">Compte visé ou compte recherché</label>
+        <textarea id="offre-details"></textarea>
+        <p class="aide">Nom du compte de la liste, ou ce que tu cherches (niveau, joueurs, skins…).</p>
+        <p class="erreur" id="err-offre-details"></p>
+      </div>
+      <div>
+        <label for="offre-budget">Mon budget (FCFA)</label>
+        <input id="offre-budget" type="text" inputmode="numeric">
+        <p class="erreur" id="err-offre-budget"></p>
+      </div>
+      <div>
+        <label for="offre-whatsapp">Ton numéro WhatsApp</label>
+        <input id="offre-whatsapp" type="tel" autocomplete="tel">
+        <p class="erreur" id="err-offre-whatsapp"></p>
+      </div>
+      <button type="submit" class="bouton">Envoyer ma proposition de prix</button>
+    </form>
+  </section>
+
+  <!-- ===== VENDRE ===== -->
+  <section id="vendre">
+    <h2>Vendre mon compte</h2>
+    <form id="formulaire" novalidate>
+      <div>
+        <label for="jeu">Jeu</label>
+        <select id="jeu"></select>
+      </div>
+      <div>
+        <label for="plateforme">Plateforme</label>
+        <select id="plateforme"></select>
+      </div>
+      <div>
+        <label for="description">Description du compte</label>
+        <textarea id="description"></textarea>
+        <p class="aide">Niveau, rang, joueurs, skins, équipements… Pas de mot de passe ici.</p>
+        <p class="erreur" id="err-description"></p>
+      </div>
+      <div>
+        <label for="prix-voulu">Prix souhaité (FCFA)</label>
+        <input id="prix-voulu" type="text" inputmode="numeric">
+        <p class="erreur" id="err-prix-voulu"></p>
+      </div>
+      <div>
+        <label for="whatsapp">Ton numéro WhatsApp</label>
+        <input id="whatsapp" type="tel" autocomplete="tel">
+        <p class="erreur" id="err-whatsapp"></p>
+      </div>
+      <button type="submit" class="bouton">Envoyer ma proposition</button>
+    </form>
+  </section>
+</main>
+
+<script>
+  // ===== Réglage : ton numéro WhatsApp (indicatif + numéro, sans + ni espaces) =====
+  const NUMERO_ORGANISATEUR = "225XXXXXXXXXX";
+
+  const JEUX = ["eFootball", "Free Fire", "FC Mobile", "Call of Duty"];
+  const PLATEFORMES = ["Mobile", "PC", "PlayStation"];
+
+  // ===== Catalogue : EXEMPLES à remplacer par tes vrais comptes vérifiés =====
+  const COMPTES = [
+    { jeu: "eFootball", plateforme: "Mobile", titre: "Compte eFootball équipe forte",
+      desc: "Exemple : plusieurs joueurs étoiles, bon classement en division.", prix: 15000 },
+    { jeu: "Free Fire", plateforme: "Mobile", titre: "Compte Free Fire niveau élevé",
+      desc: "Exemple : skins rares, plusieurs personnages débloqués.", prix: 10000 },
+    { jeu: "FC Mobile", plateforme: "Mobile", titre: "Compte FC Mobile équipe complète",
+      desc: "Exemple : équipe bien notée, monnaie du jeu incluse.", prix: 12000 },
+    { jeu: "Call of Duty", plateforme: "PC", titre: "Compte Call of Duty prestige",
+      desc: "Exemple : niveau élevé, armes et camouflages débloqués.", prix: 25000 },
+    { jeu: "Call of Duty", plateforme: "PlayStation", titre: "Compte Call of Duty PlayStation",
+      desc: "Exemple : progression avancée, plusieurs extensions.", prix: 30000 }
+  ];
+
+  function formaterPrix(n) { return n.toLocaleString("fr-FR") + " FCFA"; }
+
+  function ouvrirWhatsApp(message) {
+    window.location.href = "https://wa.me/" + NUMERO_ORGANISATEUR + "?text=" + encodeURIComponent(message);
+  }
+
+  // Remplit une liste déroulante
+  function remplirSelect(select, options, avecTout) {
+    if (avecTout) select.add(new Option("Tous", "Tous"));
+    options.forEach(o => select.add(new Option(o, o)));
+  }
+
+  const filtreJeu = document.getElementById("filtre-jeu");
+  const filtrePlateforme = document.getElementById("filtre-plateforme");
+  const grille = document.getElementById("grille");
+
+  remplirSelect(filtreJeu, JEUX, true);
+  remplirSelect(filtrePlateforme, PLATEFORMES, true);
+  remplirSelect(document.getElementById("jeu"), JEUX, false);
+  remplirSelect(document.getElementById("plateforme"), PLATEFORMES, false);
+  remplirSelect(document.getElementById("offre-jeu"), JEUX, false);
+  remplirSelect(document.getElementById("offre-plateforme"), PLATEFORMES, false);
+
+  function ajouter(parent, balise, classe, texte) {
+    const el = document.createElement(balise);
+    if (classe) el.className = classe;
+    el.textContent = texte;
+    parent.appendChild(el);
+    return el;
+  }
+
+  function afficherComptes() {
+    grille.innerHTML = "";
+    const liste = COMPTES.filter(c =>
+      (filtreJeu.value === "Tous" || c.jeu === filtreJeu.value) &&
+      (filtrePlateforme.value === "Tous" || c.plateforme === filtrePlateforme.value)
+    );
+
+    if (liste.length === 0) {
+      ajouter(grille, "p", "vide", "Aucun compte pour ces filtres. Essaie un autre jeu ou une autre plateforme.");
+      return;
+    }
+
+    liste.forEach(c => {
+      const carte = document.createElement("article");
+      carte.className = "carte";
+
+      const etiquettes = document.createElement("div");
+      etiquettes.className = "etiquettes";
+      ajouter(etiquettes, "span", "etiquette", c.jeu);
+      ajouter(etiquettes, "span", "etiquette", c.plateforme);
+      carte.appendChild(etiquettes);
+
+      ajouter(carte, "h3", "", c.titre);
+      ajouter(carte, "p", "desc", c.desc);
+      ajouter(carte, "p", "prix", formaterPrix(c.prix));
+
+      const boutons = document.createElement("div");
+      boutons.className = "boutons-carte";
+      carte.appendChild(boutons);
+
+      const bouton = ajouter(boutons, "button", "bouton", "Acheter ce compte");
+      bouton.addEventListener("click", () => {
+        ouvrirWhatsApp("Bonjour, je suis intéressé par ce compte : " + c.titre +
+          " (" + c.jeu + ", " + c.plateforme + ") à " + formaterPrix(c.prix) + ".");
+      });
+
+      // Pré-remplit le formulaire de proposition avec ce compte, puis y fait défiler la page
+      const offre = ajouter(boutons, "button", "bouton secondaire", "Proposer mon prix");
+      offre.addEventListener("click", () => {
+        document.getElementById("offre-jeu").value = c.jeu;
+        document.getElementById("offre-plateforme").value = c.plateforme;
+        document.getElementById("offre-details").value = c.titre;
+        document.getElementById("offre").scrollIntoView({ behavior: "smooth" });
+        document.getElementById("offre-budget").focus({ preventScroll: true });
+      });
+
+      grille.appendChild(carte);
+    });
+  }
+
+  filtreJeu.addEventListener("change", afficherComptes);
+  filtrePlateforme.addEventListener("change", afficherComptes);
+  afficherComptes();
+
+  // ===== Formulaire de vente =====
+  function erreur(id, message) {
+    document.getElementById("err-" + id).textContent = message;
+    document.getElementById(id).classList.toggle("invalide", message !== "");
+    return message === "";
+  }
+
+  document.getElementById("formulaire").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const jeu = document.getElementById("jeu").value;
+    const plateforme = document.getElementById("plateforme").value;
+    const description = document.getElementById("description").value.trim();
+    const prixVoulu = document.getElementById("prix-voulu").value.trim();
+    const whatsapp = document.getElementById("whatsapp").value.trim();
+
+    const ok = [
+      erreur("description", description.length < 15 ? "Décris ton compte (15 caractères minimum)." : ""),
+      erreur("prix-voulu", !/^\d{3,}$/.test(prixVoulu) ? "Entre un prix en chiffres, par exemple 10000." : ""),
+      erreur("whatsapp", !/^\+?\d[\d\s]{7,}$/.test(whatsapp) ? "Entre un numéro valide (8 chiffres minimum)." : "")
+    ].every(Boolean);
+
+    if (!ok) return;
+
+    ouvrirWhatsApp("Bonjour, je veux vendre mon compte.\n" +
+      "Jeu : " + jeu + "\n" +
+      "Plateforme : " + plateforme + "\n" +
+      "Description : " + description + "\n" +
+      "Prix souhaité : " + formaterPrix(Number(prixVoulu)) + "\n" +
+      "Mon WhatsApp : " + whatsapp);
+  });
+
+  // ===== Formulaire de proposition de prix =====
+  document.getElementById("formulaire-offre").addEventListener("submit", function (e) {
+    e.preventDefault();
+
+    const jeu = document.getElementById("offre-jeu").value;
+    const plateforme = document.getElementById("offre-plateforme").value;
+    const details = document.getElementById("offre-details").value.trim();
+    const budget = document.getElementById("offre-budget").value.trim();
+    const whatsapp = document.getElementById("offre-whatsapp").value.trim();
+
+    const ok = [
+      erreur("offre-details", details.length < 10 ? "Indique le compte visé ou ce que tu cherches (10 caractères minimum)." : ""),
+      erreur("offre-budget", !/^\d{3,}$/.test(budget) ? "Entre ton budget en chiffres, par exemple 8000." : ""),
+      erreur("offre-whatsapp", !/^\+?\d[\d\s]{7,}$/.test(whatsapp) ? "Entre un numéro valide (8 chiffres minimum)." : "")
+    ].every(Boolean);
+
+    if (!ok) return;
+
+    ouvrirWhatsApp("Bonjour, je veux proposer un prix pour un compte.\n" +
+      "Jeu : " + jeu + "\n" +
+      "Plateforme : " + plateforme + "\n" +
+      "Compte visé ou recherché : " + details + "\n" +
+      "Mon budget : " + formaterPrix(Number(budget)) + "\n" +
+      "Mon WhatsApp : " + whatsapp);
+  });
+</script>
+<script src="pwa.js"></script>
+</body>
+</html>
