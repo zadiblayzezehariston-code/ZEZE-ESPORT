@@ -1,5 +1,5 @@
 // Change ce numéro à chaque mise à jour du site pour renouveler le cache
-const VERSION = "arene-v1";
+const VERSION = "arene-v2";
 
 const FICHIERS = [
   "index.html",
