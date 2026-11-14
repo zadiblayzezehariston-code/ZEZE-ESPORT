@@ -1,11 +1,15 @@
 // Change ce numéro à chaque mise à jour du site pour renouveler le cache
-const VERSION = "arene-v2";
+const VERSION = "arene-v3";
 
 const FICHIERS = [
   "index.html",
   "inscription.html",
   "services.html",
   "comptes.html",
+  "connexion.html",
+  "espace.html",
+  "espace.css",
+  "firebase.js",
   "manifest.json",
   "pwa.js",
   "icon-192.png",
@@ -31,6 +35,8 @@ self.addEventListener("activate", event => {
 // Chargement : internet d'abord (pour voir les mises à jour), sinon le cache
 self.addEventListener("fetch", event => {
   if (event.request.method !== "GET") return;
+  // On ne touche pas aux requêtes vers Firebase / Google : seulement aux fichiers du site
+  if (new URL(event.request.url).origin !== self.location.origin) return;
   event.respondWith(
     fetch(event.request)
       .then(reponse => {

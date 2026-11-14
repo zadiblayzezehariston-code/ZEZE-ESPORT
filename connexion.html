@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Connexion – ZEZE GAME ZONE</title>
+<link rel="stylesheet" href="espace.css">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e0b1a">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<header>
+  <nav>
+    <a href="index.html" class="logo">ZEZE <span>GAME</span> ZONE</a>
+    <a href="index.html" class="lien">Retour à l’accueil</a>
+  </nav>
+</header>
+
+<main class="conteneur">
+  <h1>Mon espace</h1>
+  <p class="intro">Crée un compte pour organiser tes propres tournois.</p>
+
+  <div class="onglets">
+    <button type="button" class="bouton sec actif" id="t-creer">Créer un compte</button>
+    <button type="button" class="bouton sec" id="t-connexion">Se connecter</button>
+  </div>
+
+  <form class="boite" id="form" novalidate>
+    <div>
+      <label for="email">Adresse email</label>
+      <input id="email" type="email" autocomplete="email">
+    </div>
+    <div>
+      <label for="mdp">Mot de passe</label>
+      <input id="mdp" type="password" autocomplete="new-password">
+      <p class="aide">6 caractères minimum.</p>
+    </div>
+    <div id="bloc-conf">
+      <label for="conf">Confirme le mot de passe</label>
+      <input id="conf" type="password" autocomplete="new-password">
+    </div>
+    <p class="aide">Choisis un mot de passe pour ce site. Ne donne jamais le mot de passe de ton compte Gmail.</p>
+    <p class="msg" id="msg" role="alert"></p>
+    <button class="bouton" id="envoi" type="submit">Créer mon compte</button>
+    <button class="bouton sec" id="google" type="button">Continuer avec Google</button>
+    <button class="lien" id="oubli" type="button">Mot de passe oublié ?</button>
+  </form>
+</main>
+
+<script type="module">
+  import {
+    auth, onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+    GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail
+  } from "./firebase.js";
+
+  const $ = id => document.getElementById(id);
+  let mode = "creer";
+
+  const ERREURS = {
+    "auth/email-already-in-use": "Cette adresse a déjà un compte. Utilise « Se connecter ».",
+    "auth/invalid-email": "Adresse email invalide.",
+    "auth/weak-password": "Mot de passe trop faible (6 caractères minimum).",
+    "auth/invalid-credential": "Email ou mot de passe incorrect.",
+    "auth/user-not-found": "Aucun compte avec cette adresse.",
+    "auth/wrong-password": "Email ou mot de passe incorrect.",
+    "auth/too-many-requests": "Trop d’essais. Attends quelques minutes puis réessaie.",
+    "auth/network-request-failed": "Pas de connexion internet.",
+    "auth/popup-closed-by-user": "Connexion Google annulée.",
+    "auth/unauthorized-domain": "Ce site n’est pas encore autorisé dans Firebase (domaines autorisés).",
+    "auth/operation-not-allowed": "Cette méthode de connexion n’est pas activée dans Firebase."
+  };
+
+  function msg(texte, ok) {
+    $("msg").textContent = texte;
+    $("msg").className = "msg " + (ok ? "ok" : "err");
+  }
+  function erreurTexte(e) { return ERREURS[e.code] || "Erreur : " + (e.code || e.message); }
+
+  function changer(m) {
+    mode = m;
+    $("t-creer").classList.toggle("actif", m === "creer");
+    $("t-connexion").classList.toggle("actif", m === "connexion");
+    $("bloc-conf").style.display = m === "creer" ? "block" : "none";
+    $("envoi").textContent = m === "creer" ? "Créer mon compte" : "Me connecter";
+    $("mdp").autocomplete = m === "creer" ? "new-password" : "current-password";
+    msg("");
+  }
+  $("t-creer").addEventListener("click", () => changer("creer"));
+  $("t-connexion").addEventListener("click", () => changer("connexion"));
+
+  // Déjà connecté : on va directement à Mon espace
+  onAuthStateChanged(auth, u => { if (u) location.replace("espace.html"); });
+
+  $("form").addEventListener("submit", async e => {
+    e.preventDefault();
+    const email = $("email").value.trim();
+    const mdp = $("mdp").value;
+    if (!/^\S+@\S+\.\S+$/.test(email)) return msg("Entre une adresse email valide.");
+    if (mdp.length < 6) return msg("Le mot de passe doit avoir 6 caractères minimum.");
+    if (mode === "creer" && mdp !== $("conf").value) return msg("Les deux mots de passe sont différents.");
+
+    $("envoi").disabled = true;
+    try {
+      if (mode === "creer") await createUserWithEmailAndPassword(auth, email, mdp);
+      else await signInWithEmailAndPassword(auth, email, mdp);
+    } catch (err) {
+      msg(erreurTexte(err));
+      $("envoi").disabled = false;
+    }
+  });
+
+  $("google").addEventListener("click", async () => {
+    try { await signInWithPopup(auth, new GoogleAuthProvider()); }
+    catch (err) { msg(erreurTexte(err)); }
+  });
+
+  $("oubli").addEventListener("click", async () => {
+    const email = $("email").value.trim();
+    if (!/^\S+@\S+\.\S+$/.test(email)) return msg("Entre d’abord ton adresse email ci-dessus.");
+    try {
+      await sendPasswordResetEmail(auth, email);
+      msg("Email envoyé : vérifie ta boîte de réception (et les spams).", true);
+    } catch (err) { msg(erreurTexte(err)); }
+  });
+</script>
+<script src="pwa.js"></script>
+</body>
+</html>

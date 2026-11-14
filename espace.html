@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mon espace – ZEZE GAME ZONE</title>
+<link rel="stylesheet" href="espace.css">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e0b1a">
+<link rel="apple-touch-icon" href="icon-192.png">
+</head>
+<body>
+
+<header>
+  <nav>
+    <a href="index.html" class="logo">ZEZE <span>GAME</span> ZONE</a>
+    <button class="lien" id="deco" type="button">Déconnexion</button>
+  </nav>
+</header>
+
+<main class="conteneur">
+  <h1>Mon espace</h1>
+  <p class="intro" id="email-affiche">Chargement…</p>
+
+  <section class="boite" id="bloc-id">
+    <div>
+      <p class="aide">Ton identifiant unique</p>
+      <p class="code" id="code">…</p>
+    </div>
+  </section>
+  <p class="msg err" id="msg-profil"></p>
+  <br>
+
+  <section>
+    <h2>Organiser un tournoi</h2>
+    <form class="boite" id="form-t" novalidate>
+      <div>
+        <label for="nom">Nom du tournoi</label>
+        <input id="nom" type="text" maxlength="60">
+      </div>
+      <div>
+        <label for="jeu">Jeu</label>
+        <select id="jeu"></select>
+      </div>
+      <div>
+        <label for="type">Type de tournoi</label>
+        <select id="type"></select>
+      </div>
+      <div>
+        <label for="nb">Nombre d’équipes</label>
+        <input id="nb" type="number" inputmode="numeric" min="6" max="64" step="2" placeholder="6, 8, 10, 12…">
+        <p class="aide">Nombre pair, 6 minimum (64 maximum).</p>
+      </div>
+      <div>
+        <label for="date">Date de début (facultatif)</label>
+        <input id="date" type="date">
+      </div>
+      <p class="msg" id="msg-t" role="alert"></p>
+      <button class="bouton" id="creer" type="submit">Créer le tournoi</button>
+    </form>
+  </section>
+
+  <section>
+    <h2>Mes tournois</h2>
+    <div class="liste" id="liste"><p class="aide">Chargement…</p></div>
+  </section>
+</main>
+
+<script type="module">
+  import {
+    auth, db, onAuthStateChanged, signOut, doc, getDoc, writeBatch,
+    collection, addDoc, query, where, getDocs, deleteDoc
+  } from "./firebase.js";
+
+  const $ = id => document.getElementById(id);
+  const JEUX = ["eFootball", "Free Fire", "FC Mobile", "Call of Duty"];
+  const GROUPES = [
+    ["Sélections nationales", {
+      "nations-afrique": "Nations africaines",
+      "nations-europe": "Nations européennes",
+      "nations-asie": "Nations asiatiques",
+      "nations-ameriques": "Nations américaines",
+      "nations-monde": "Mondial (toutes les nations)"
+    }],
+    ["Championnats de clubs", {
+      "clubs-premier-league": "Premier League",
+      "clubs-liga": "La Liga",
+      "clubs-serie-a": "Serie A",
+      "clubs-bundesliga": "Bundesliga",
+      "clubs-ligue-1": "Ligue 1",
+      "clubs-ligue-des-champions": "Ligue des champions",
+      "clubs-autre": "Autre championnat de clubs"
+    }],
+    ["Autre", { "libre": "Tournoi libre (toutes équipes)" }]
+  ];
+  const TYPES = Object.assign({}, ...GROUPES.map(g => g[1]));
+
+  // Remplit les listes déroulantes
+  JEUX.forEach(j => $("jeu").add(new Option(j, j)));
+  GROUPES.forEach(([titre, options]) => {
+    const g = document.createElement("optgroup");
+    g.label = titre;
+    Object.entries(options).forEach(([val, nom]) => g.appendChild(new Option(nom, val)));
+    $("type").appendChild(g);
+  });
+
+  function el(balise, classe, texte) {
+    const e = document.createElement(balise);
+    if (classe) e.className = classe;
+    if (texte !== undefined) e.textContent = texte;
+    return e;
+  }
+  function msgT(texte, ok) { $("msg-t").textContent = texte; $("msg-t").className = "msg " + (ok ? "ok" : "err"); }
+
+  // Génère un code lisible du type ZGZ-K7M2QX
+  function genererCode() {
+    const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const octets = crypto.getRandomValues(new Uint8Array(6));
+    return "ZGZ-" + Array.from(octets, o => alphabet[o % alphabet.length]).join("");
+  }
+
+  // Récupère ou crée le profil (identifiant unique garanti par la base de données)
+  async function assurerProfil(u) {
+    const ref = doc(db, "profils", u.uid);
+    const s = await getDoc(ref);
+    if (s.exists()) return s.data().codeJoueur;
+    for (let i = 0; i < 6; i++) {
+      const code = genererCode();
+      try {
+        const b = writeBatch(db);
+        b.set(doc(db, "codes", code), { uid: u.uid });
+        b.set(ref, { uid: u.uid, email: u.email || "", codeJoueur: code, creeLe: Date.now() });
+        await b.commit();
+        return code;
+      } catch (e) { if (i === 5) throw e; }
+    }
+  }
+
+  async function chargerTournois(uid) {
+    const zone = $("liste");
+    try {
+      const res = await getDocs(query(collection(db, "tournois"), where("proprietaire", "==", uid)));
+      const liste = res.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.creeLe || 0) - (a.creeLe || 0));
+      zone.innerHTML = "";
+      if (liste.length === 0) { zone.appendChild(el("p", "aide", "Tu n’as pas encore créé de tournoi.")); return; }
+      liste.forEach(t => {
+        const c = el("article", "carte");
+        c.appendChild(el("h3", "", t.nom));
+        c.appendChild(el("p", "", t.jeu + " · " + (TYPES[t.type] || t.type)));
+        c.appendChild(el("p", "", t.nbEquipes + " équipes" + (t.dateDebut ? " · début le " + t.dateDebut : "")));
+        c.appendChild(el("p", "", "Réf. TRN-" + t.id.slice(0, 6).toUpperCase()));
+        const sup = el("button", "bouton sec", "Supprimer");
+        sup.type = "button";
+        sup.addEventListener("click", async () => {
+          if (!confirm("Supprimer le tournoi « " + t.nom + " » ?")) return;
+          try { await deleteDoc(doc(db, "tournois", t.id)); chargerTournois(uid); }
+          catch (e) { msgT("Suppression impossible : " + (e.code || e.message)); }
+        });
+        c.appendChild(sup);
+        zone.appendChild(c);
+      });
+    } catch (e) {
+      zone.innerHTML = "";
+      zone.appendChild(el("p", "msg err", "Impossible de charger tes tournois : " + (e.code || e.message)));
+    }
+  }
+
+  onAuthStateChanged(auth, async u => {
+    if (!u) { location.replace("connexion.html"); return; }
+    $("email-affiche").textContent = "Connecté : " + (u.email || "compte Google");
+
+    try { $("code").textContent = await assurerProfil(u); }
+    catch (e) {
+      $("code").textContent = "—";
+      $("msg-profil").textContent = "Profil indisponible (" + (e.code || e.message) + "). Vérifie que Firestore est créé et que les règles sont publiées.";
+    }
+    chargerTournois(u.uid);
+
+    $("form-t").onsubmit = async ev => {
+      ev.preventDefault();
+      const nom = $("nom").value.trim();
+      const n = Number($("nb").value);
+      if (nom.length < 3) return msgT("Donne un nom au tournoi (3 caractères minimum).");
+      if (!Number.isInteger(n) || n < 6 || n > 64 || n % 2 !== 0)
+        return msgT("Le nombre d’équipes doit être un nombre pair, de 6 à 64.");
+
+      $("creer").disabled = true;
+      try {
+        await addDoc(collection(db, "tournois"), {
+          proprietaire: u.uid, nom, jeu: $("jeu").value, type: $("type").value,
+          nbEquipes: n, dateDebut: $("date").value, creeLe: Date.now()
+        });
+        $("form-t").reset();
+        msgT("Tournoi créé !", true);
+        chargerTournois(u.uid);
+      } catch (e) { msgT("Création impossible : " + (e.code || e.message)); }
+      $("creer").disabled = false;
+    };
+  });
+
+  $("deco").addEventListener("click", () => signOut(auth));
+</script>
+<script src="pwa.js"></script>
+</body>
+</html>
